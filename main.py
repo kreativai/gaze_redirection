@@ -3,6 +3,9 @@
 import argparse
 import os
 
+import tensorflow as tf
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
 from src.model import Model
 
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
@@ -44,6 +47,9 @@ parser.add_argument('--vgg_path', type=str, help='path of vgg model')
 
 # test dir
 parser.add_argument('--test_dir', type=str, help='path of test images')
+
+# gpu or cpu
+parser.add_argument('--cpu', action='store_true')
 
 params = parser.parse_args()
 

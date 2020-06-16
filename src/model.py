@@ -11,9 +11,10 @@ import tensorflow.contrib.slim as slim
 from tensorflow.contrib.data import shuffle_and_repeat, map_and_batch
 
 from src.archs import discriminator, generator, vgg_16
-from scipy.misc import imsave
 from src.data_loader import ImageData
 from utils.ops import l1_loss, content_loss, style_loss, angular_error
+
+from imageio import imwrite
 
 
 class Model(object):
@@ -90,6 +91,9 @@ class Model(object):
 
         train_dataset_num = len(image_data_class.train_images)
         test_dataset_num = len(image_data_class.test_images)
+
+        print("train dataset ", len(image_data_class.train_images))
+        print("test dataset ", len(image_data_class.test_images))
 
         train_dataset = tf.data.Dataset.from_tensor_slices(
             (image_data_class.train_images,
@@ -347,7 +351,11 @@ class Model(object):
 
         x_fake = generator(self.x_test_r, self.angles_test_g, reuse=True)
 
-        tf_config = tf.ConfigProto()
+        if hps.cpu or os.environ['CUDA_VISIBLE_DEVICES'] == '-1':
+            print("Using CPU")
+            tf_config = tf.ConfigProto(device_count={'GPU': 0})
+        else:
+            tf_config = tf.ConfigProto()
         tf_config.gpu_options.allow_growth = True
 
         saver = tf.train.Saver()
@@ -380,17 +388,17 @@ class Model(object):
                         delta = angular_error(a_t, a_r)
 
                         for j in range(real_imgs.shape[0]):
-                            imsave(os.path.join(
+                            imwrite(os.path.join(
                                 tar_dir,
                                 '%d_%d_%.3f_H%d_V%d.jpg' % (
                                     i, j, delta[j], a_t[j][0],
                                     a_t[j][1])), target_imgs[j])
-                            imsave(os.path.join(
+                            imwrite(os.path.join(
                                 gene_dir,
                                 '%d_%d_%.3f_H%d_V%d.jpg' % (
                                     i, j, delta[j], a_t[j][0],
                                     a_t[j][1])), fake_imgs[j])
-                            imsave(os.path.join(
+                            imwrite(os.path.join(
                                 real_dir,
                                 '%d_%d_%.3f_H%d_V%d.jpg' % (
                                     i, j, delta[j], a_t[j][0],
